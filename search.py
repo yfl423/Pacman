@@ -89,47 +89,68 @@ def depthFirstSearch(problem):
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
 
-# Start: (5, 5)
-# Is the start a goal? False
-# Start's successors: [((5, 4), 'South', 1), ((4, 5), 'West', 1)]
-    
-    from game import Directions
-    dirs = {'South': Directions.SOUTH, 'North': Directions.NORTH, 'West': Directions.WEST, 'East': Directions.EAST}
-    actions = []
+    # Start: (5, 5)
+    # Is the start a goal? False
+    # Start's successors: [((5, 4), 'South', 1), ((4, 5), 'West', 1)]
     stack = util.Stack()
     visited = set()
-    stack.push((problem.getStartState(), ''))
-    while not stack.isEmpty():
-        curr = stack.pop()
-        stack.push(curr)
-        state = curr[0]
-        action = dirs[curr[1]] if curr[1] in dirs  else None
-        if (action) : actions.append(action) 
-        if(problem.isGoalState(state)):  return actions
-        expanded = False
-        successors = problem.getSuccessors(state)
-        for successor in successors:
-            ss = successor[0]
-            if ss not in visited :
-                visited.add(ss)
-                stack.push(successor)
-                expanded = True
-                break
-        if not expanded:
-            stack.pop()
-            actions.pop()
-            visited.remove(state) 
-    return actions
+    stack.push( (problem.getStartState(), []) )
+    visited.add( problem.getStartState() )
+
+    while stack.isEmpty() == 0:
+        state, actions = stack.pop()
+        for next in problem.getSuccessors(state):
+            n_state = next[0]
+            n_direction = next[1]
+            if n_state not in visited:
+                if problem.isGoalState(n_state):
+                    return actions + [n_direction]
+                else:
+                    stack.push( (n_state, actions + [n_direction]) )
+                    visited.add( n_state )
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # util.raiseNotDefined()
+
+    q = util.Queue()
+    visited = set()
+    q.push((problem.getStartState(), []))
+    visited.add(problem.getStartState())
+    while q.isEmpty() == 0:
+        state, actions = q.pop()
+        for next in problem.getSuccessors(state):
+            n_state = next[0]
+            n_direction = next[1]
+            if n_state not in visited:
+                if problem.isGoalState(n_state):
+                    return actions + [n_direction]
+                else:
+                    q.push((n_state, actions + [n_direction]) )
+                    visited.add(n_state)
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # util.raiseNotDefined()
+    
+    pq = util.PriorityQueue()
+    visited = set()
+    pq.push((problem.getStartState(), [], 0), 0)
+    visited.add(problem.getStartState())
+    while pq.isEmpty() == 0:
+        state, actions, cost = pq.pop()
+        for next in problem.getSuccessors(state):
+            n_state = next[0]
+            n_direction = next[1]
+            n_cost = cost + next[2]
+            if n_state not in visited:
+                if problem.isGoalState(n_state):
+                    return actions + [n_direction]
+                else:
+                    pq.push((n_state, actions + [n_direction], n_cost), n_cost)
+                    visited.add(n_state)
 
 def nullHeuristic(state, problem=None):
     """
