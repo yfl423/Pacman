@@ -89,68 +89,89 @@ def depthFirstSearch(problem):
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
 
-    # Start: (5, 5)
-    # Is the start a goal? False
-    # Start's successors: [((5, 4), 'South', 1), ((4, 5), 'West', 1)]
+    if problem.isGoalState(problem.getStartState()): return [] ## Check if initial state is goal state
+    
     stack = util.Stack()
     visited = set()
-    stack.push( (problem.getStartState(), []) )
-    visited.add( problem.getStartState() )
+    stack.push( (problem.getStartState(), []))
 
     while stack.isEmpty() == 0:
         state, actions = stack.pop()
-        for next in problem.getSuccessors(state):
+        visited.add(state)
+        
+        if problem.isGoalState(state): return actions ## Termination Check
+                    
+        for next in problem.getSuccessors(state): ## Expand unvisited followers 
             n_state = next[0]
             n_direction = next[1]
             if n_state not in visited:
-                if problem.isGoalState(n_state):
-                    return actions + [n_direction]
-                else:
-                    stack.push( (n_state, actions + [n_direction]) )
-                    visited.add( n_state )
+                stack.push( (n_state, actions + [n_direction]))
+    return [] ## If reach here means no applicable solution
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
+    
+    if problem.isGoalState(problem.getStartState()): return [] ## Check if initial state is goal state
 
     q = util.Queue()
     visited = set()
     q.push((problem.getStartState(), []))
     visited.add(problem.getStartState())
+    
     while q.isEmpty() == 0:
         state, actions = q.pop()
-        for next in problem.getSuccessors(state):
+
+        if problem.isGoalState(state) : return actions ## Termination Check
+
+        for next in problem.getSuccessors(state): ## Expand unvisited followers 
             n_state = next[0]
             n_direction = next[1]
-            if n_state not in visited:
-                if problem.isGoalState(n_state):
-                    return actions + [n_direction]
-                else:
-                    q.push((n_state, actions + [n_direction]) )
-                    visited.add(n_state)
+            if n_state not in visited: 
+                visited.add(n_state) ## Ensure each expanded node only be enqueued once
+                q.push((n_state, actions + [n_direction]))
+    return [] ## If reach here means no applicable solution
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
     # util.raiseNotDefined()
+
+    if problem.isGoalState(problem.getStartState()): return [] ## Check if initial state is goal state
+
     
     pq = util.PriorityQueue()
     visited = set()
-    pq.push((problem.getStartState(), [], 0), 0)
+    pq.push((problem.getStartState(), []), 0)
     visited.add(problem.getStartState())
+
     while pq.isEmpty() == 0:
-        state, actions, cost = pq.pop()
-        for next in problem.getSuccessors(state):
-            n_state = next[0]
-            n_direction = next[1]
-            n_cost = cost + next[2]
-            if n_state not in visited:
-                if problem.isGoalState(n_state):
-                    return actions + [n_direction]
-                else:
-                    pq.push((n_state, actions + [n_direction], n_cost), n_cost)
-                    visited.add(n_state)
+        
+        state, actions = pq.pop()
+        visited.add(state)
+
+        if problem.isGoalState(state): return actions ## Termination Check
+
+        for next in problem.getSuccessors(state): ## Expand unvisited followers 
+            if next[0] not in visited and (next[0] not in (state[2][0] for state in pq.heap)):
+
+                new_actions = actions + [next[1]]
+                pri = problem.getCostOfActions(new_actions)
+
+                pq.push((next[0],new_actions),pri)
+
+            elif next[0] not in visited and (next[0] in (state[2][0] for state in pq.heap)):
+                for state in pq.heap:
+                    if state[2][0] == next[0]:
+                        old_pri = problem.getCostOfActions(state[2][1])
+
+                new_pri = problem.getCostOfActions(actions + [next[1]])
+
+                if old_pri > new_pri:
+                    new_actions = actions + [next[1]]
+                    pq.update((next[0],new_actions),new_pri)
+    return [] ## If reach here means no applicable solution
 
 def nullHeuristic(state, problem=None):
     """
@@ -166,21 +187,35 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     pq = util.PriorityQueue()
     visited = set()
     
-    pq.push((problem.getStartState(),[], 0, heuristic(problem.getStartState(), problem)), 0 + heuristic(problem.getStartState(), problem))
+    pq.push((problem.getStartState(),[]), 0 + heuristic(problem.getStartState(), problem))
     visited.add(problem.getStartState())
 
     while pq.isEmpty() == 0:
-        state, actions, g, _ = pq.pop()
-        for next in problem.getSuccessors(state):
-            n_state = next[0]
-            n_direction = next[1]
-            n_cost = next[2]
-            if n_state not in visited:
-                if problem.isGoalState(n_state):
-                    return actions + [n_direction]
-                else:
-                    visited.add(n_state)
-                    pq.push((n_state, actions + [n_direction], g+ n_cost, heuristic(n_state, problem)), g + n_cost + heuristic(n_state, problem))
+        
+        state, actions = pq.pop()
+        visited.add(state)
+
+        if problem.isGoalState(state): return actions ## Termination Check
+
+        for next in problem.getSuccessors(state): ## Expand unvisited followers 
+            if next[0] not in visited and (next[0] not in (state[2][0] for state in pq.heap)):
+
+                new_actions = actions + [next[1]]
+                pri = problem.getCostOfActions(new_actions) + heuristic(next[0], problem)
+
+                pq.push((next[0],new_actions),pri)
+
+            elif next[0] not in visited and (next[0] in (state[2][0] for state in pq.heap)):
+                for state in pq.heap:
+                    if state[2][0] == next[0]:
+                        old_pri = problem.getCostOfActions(state[2][1]) + + heuristic(state[2][0], problem)
+
+                new_pri = problem.getCostOfActions(actions + [next[1]]) + heuristic(next[0], problem)
+
+                if old_pri > new_pri:
+                    new_actions = actions + [next[1]]
+                    pq.update((next[0],new_actions),new_pri)
+    return [] ## If reach here means no applicable solution
 
 # Abbreviations
 bfs = breadthFirstSearch

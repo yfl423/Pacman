@@ -334,7 +334,7 @@ class CornersProblem(search.SearchProblem):
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
                 for idx, corner in enumerate(self.corners):
-                    if nextx == corner[0] and nexty == corner[1]: next_state ^= ((1 << idx))
+                    if nextx == corner[0] and nexty == corner[1]: next_state |= ((1 << idx))
                 # print((nextx, nexty, next_state))
                 successors.append(((nextx, nexty, next_state), action, 1))
 
@@ -356,6 +356,16 @@ class CornersProblem(search.SearchProblem):
 
 
 def cornersHeuristic(state, problem):
+    ## Take the max Manhattan Distance of all unvisited corners as the Heuristic
+    x = state[0]
+    y = state[1]
+    bw = state[2]
+    m_distance = [0] ## Return 0 if all corners visited already, means goal state.
+    for idx, corner in enumerate(problem.corners):
+        if ((bw >> idx) & 1) == 0 : m_distance.append(util.manhattanDistance((x,y), corner))
+    
+    return max(m_distance)
+
     """
     A heuristic for the CornersProblem that you defined.
 
